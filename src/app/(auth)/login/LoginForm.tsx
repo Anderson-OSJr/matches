@@ -1,24 +1,34 @@
 "use client";
 
+import { signInUser } from "@/app/actions/authActions";
 import { loginSchema, LoginSchema } from "@/lib/schemas/loginSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Card, CardBody, CardHeader } from "@nextui-org/card";
 import { Button, Input } from "@nextui-org/react";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { GiPadlock } from "react-icons/gi";
+import { toast } from "react-toastify";
 
 const LoginForm = () => {
+  const router = useRouter();
+
   const {
     register,
     handleSubmit,
-    formState: { errors, isValid },
+    formState: { errors, isValid, isSubmitting },
   } = useForm<LoginSchema>({
     resolver: zodResolver(loginSchema),
     mode: "onTouched",
   });
 
-  const onSubmit = (data: LoginSchema) => {
-    console.log(data);
+  const onSubmit = async (data: LoginSchema) => {
+    const result = await signInUser(data);
+    if (result.status === "success") {
+      router.push("/members");
+    } else {
+      toast.error(result.error as string);
+    }
   };
 
   return (
@@ -54,6 +64,7 @@ const LoginForm = () => {
                 errorMessage={errors.password?.message}
               />
               <Button
+                isLoading={isSubmitting}
                 className="bg-purple-500 text-white font-semibold"
                 isDisabled={!isValid}
                 fullWidth
